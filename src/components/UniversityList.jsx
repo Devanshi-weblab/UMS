@@ -104,8 +104,10 @@ const UniversityList = () => {
 
     const [date, setData] = useState([]);
 
+    // https://api.mydummyapi.com/users
+
     useEffect(() => {
-        fetch("https://api.mydummyapi.com/users")
+        fetch("https://eden-theurgic-mason.ngrok-free.dev/api/programs")
             .then(response => response.json())
             .then(json => setData(json))
             .catch(error => console.error("Error:", error));
