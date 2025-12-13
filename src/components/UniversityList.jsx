@@ -1,144 +1,59 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Box from '@mui/material/Box';
-import {
-    DataGridPro,
-} from '@mui/x-data-grid-pro';
 
 const columns = [
-    {
-        field: 'universityname',
-        headerName: 'University Name',
-        width: 150,
-        editable: true,
-    },
-    {
-        field: 'programs',
-        headerName: 'Program(s)',
-        width: 150,
-        editable: true,
-    },
-    {
-        field: 'currentstatus',
-        headerName: 'Current Status',
-        type: 'number',
-        width: 110,
-        editable: true,
-    },
-    {
-        field: 'issues',
-        headerName: 'Issues',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-
-    },
-    {
-        field: 'newChallenges',
-        headerName: 'New Challenges',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-
-    },
-    {
-        field: 'prposedAction',
-        headerName: 'Proposed Action',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-
-    },
-    {
-        field: 'responsibleperson',
-        headerName: 'Responsible Person',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-
-    },
-    {
-        field: 'Timeline',
-        headerName: 'Timeline/Deadline',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-
-    },
-    {
-        field: 'keyupdates',
-        headerName: 'Key Update',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-
-    },
-    {
-        field: 'status',
-        headerName: 'Status',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-
-    },
-    {
-        field: 'action',
-        headerName: 'Action',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-
-    }
+  { field: 'university', headerName: 'University Name', width: 150 },
+  { field: 'programs', headerName: 'Program(s)', width: 150 },
+  { field: 'currentStatus', headerName: 'Current Status', width: 150 },
+  { field: 'issues', headerName: 'Issues', width: 160 },
+  { field: 'proposedAction', headerName: 'Proposed Action', width: 160 },
+  { field: 'responsiblePerson', headerName: 'Responsible Person', width: 180 },
+  { field: 'deadline', headerName: 'Timeline / Deadline', width: 160 },
+  { field: 'keyUpdates', headerName: 'Key Update', width: 160 },
+  { field: 'status', headerName: 'Status', width: 120 },
 ];
-
-const rows = [
-    { id: 1, lastName: 'Snow', firstName: 'Jon', age: 14 },
-
-];
-
-// api 
-// ​/api​/v1​/Users
-
 
 const UniversityList = () => {
+  const [rows, setRows] = useState([]);
 
-    const [date, setData] = useState([]);
+  useEffect(() => {
+    fetch("http://localhost:5000/api/programs")
+      .then(res => res.json())
+      .then(json => {
+        console.log("API Response:", json);
 
-    // https://api.mydummyapi.com/users
+        const mappedRows = json.data.map(item => ({
+          id: item._id, // REQUIRED
+          university: item.university,
+          programs: item.programs,
+          currentStatus: item.currentStatus,
+          issues: item.issues,
+          proposedAction: item.proposedAction,
+          responsiblePerson: item.responsiblePerson,
+          deadline: item.deadline
+            ? new Date(item.deadline).toLocaleDateString()
+            : '',
+          keyUpdates: item.keyUpdates,
+          status: item.status
+        }));
 
-    useEffect(() => {
-        fetch("https://eden-theurgic-mason.ngrok-free.dev/api/programs")
-            .then(response => response.json())
-            .then(json => setData(json))
-            .catch(error => console.error("Error:", error));
-    }, [])
+        setRows(mappedRows);
+      })
+      .catch(err => console.error(err));
+  }, []);
 
+  return (
+    <Box sx={{ height: 400, width: '100%' }}>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        pageSize={5}
+        rowsPerPageOptions={[5]}
+        checkboxSelection
+      />
+    </Box>
+  );
+};
 
-
-    return (
-        <>
-
-            <Box sx={{ height: 400, width: '100%' }}>
-                <DataGridPro
-                    rows={rows}
-                    columns={columns}
-                    initialState={{
-                        pinnedColumns: { left: ['universityname'], right: ['action'] },
-                        pagination: {
-                            paginationModel: {
-                                pageSize: 5,
-                            },
-                        },
-                    }}
-                    pageSizeOptions={[5]}
-                    checkboxSelection
-                    disableRowSelectionOnClick
-                />
-            </Box>
-        </>
-    );
-}
-
-
-
-export default UniversityList
+export default UniversityList;
