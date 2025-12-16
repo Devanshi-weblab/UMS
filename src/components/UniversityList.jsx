@@ -1,58 +1,208 @@
 import React, { useEffect, useState } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
-import Box from '@mui/material/Box';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Grid,
+  Box,
+  IconButton,
+} from '@mui/material';
+import CreateUniversityList from './CreateUniversityList';
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteSingle from './DeleteSingle';
 
-const columns = [
-  { field: 'university', headerName: 'University Name', width: 150 },
-  { field: 'programs', headerName: 'Program(s)', width: 150 },
-  { field: 'currentStatus', headerName: 'Current Status', width: 150 },
-  { field: 'issues', headerName: 'Issues', width: 160 },
-  { field: 'proposedAction', headerName: 'Proposed Action', width: 160 },
-  { field: 'responsiblePerson', headerName: 'Responsible Person', width: 180 },
-  { field: 'deadline', headerName: 'Timeline / Deadline', width: 160 },
-  { field: 'keyUpdates', headerName: 'Key Update', width: 160 },
-  { field: 'status', headerName: 'Status', width: 120 },
-];
+const stickyLeftHeader = {
+  position: 'sticky',
+  left: 0,
+  zIndex: 5,
+  backgroundColor: '#f9fafb',
+  borderRight: '1px solid #e0e0e0',
+};
+
+const stickyLeftCell = {
+  position: 'sticky',
+  left: 0,
+  zIndex: 3,
+  backgroundColor: '#fff',
+  borderRight: '1px solid #e0e0e0',
+};
+
+const stickyRightHeader = {
+  position: 'sticky',
+  right: 0,
+  zIndex: 5,
+  backgroundColor: '#f9fafb',
+  borderLeft: '1px solid #e0e0e0',
+};
+
+const stickyRightCell = {
+  position: 'sticky',
+  right: 0,
+  zIndex: 3,
+  backgroundColor: '#fff',
+  borderLeft: '1px solid #e0e0e0',
+};
+
+const headerStyle = {
+  fontWeight: 600,
+  whiteSpace: 'nowrap',
+};
+
 
 const UniversityList = () => {
-  const [rows, setRows] = useState([]);
+  const [data, setData] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleOpenDelete = (row) => {
+    setSelectedRow(row);
+    setOpenDelete(true);
+  };
+
+  const handleCloseDelete = () => {
+    setOpenDelete(false);
+    setSelectedRow(null);
+  };
+
+
+  const fetchData = () => {
+    fetch("http://localhost:5000/api/programs")
+      .then((res) => res.json())
+      .then((json) => setData(json.data))
+      .catch(console.error);
+  };
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/programs")
-      .then(res => res.json())
-      .then(json => {
-        console.log("API Response:", json);
-
-        const mappedRows = json.data.map(item => ({
-          id: item._id, // REQUIRED
-          university: item.university,
-          programs: item.programs,
-          currentStatus: item.currentStatus,
-          issues: item.issues,
-          proposedAction: item.proposedAction,
-          responsiblePerson: item.responsiblePerson,
-          deadline: item.deadline
-            ? new Date(item.deadline).toLocaleDateString()
-            : '',
-          keyUpdates: item.keyUpdates,
-          status: item.status
-        }));
-
-        setRows(mappedRows);
-      })
-      .catch(err => console.error(err));
+    fetchData();
   }, []);
 
   return (
-    <Box sx={{ height: 400, width: '100%' }}>
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
-        checkboxSelection
-      />
-    </Box>
+    <Grid container spacing={2}>
+      <Grid size={12} >
+        <Box display="flex" justifyContent="flex-end">
+          <Button variant="contained" onClick={() => setOpen(true)}>
+            Add Program
+          </Button>
+        </Box>
+
+        <CreateUniversityList
+          open={open}
+          handleClose={handleClose}
+          onSuccess={fetchData}
+        />
+      </Grid>
+      <Grid size={12}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            maxHeight: 520,
+            overflowX: 'auto',
+          }}
+        >
+          <Table stickyHeader sx={{ minWidth: 1600, tableLayout: 'fixed' }}>
+
+            <TableHead>
+              <TableRow>
+                <TableCell sx={stickyLeftHeader}>
+                  University Name
+                </TableCell>
+
+                <TableCell sx={headerStyle}>Program(s)</TableCell>
+                <TableCell sx={headerStyle}>Current Status</TableCell>
+                <TableCell sx={headerStyle}>Issues / Challenges</TableCell>
+                <TableCell sx={headerStyle}>Proposed Action</TableCell>
+                <TableCell sx={headerStyle}>Responsible Person</TableCell>
+                <TableCell sx={headerStyle}>Timeline / Deadline</TableCell>
+                <TableCell sx={headerStyle}>Key Update</TableCell>
+                <TableCell sx={headerStyle}>Status</TableCell>
+
+                <TableCell sx={stickyRightHeader}>
+                  Action
+                </TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {data.map((row) => (
+                <TableRow key={row._id} hover>
+
+                  {/* Sticky Left */}
+                  <TableCell sx={stickyLeftCell}>
+                    {row.university}
+                  </TableCell>
+
+                  <TableCell>{row.programs}</TableCell>
+
+                  <TableCell sx={{ whiteSpace: 'normal' }}>
+                    {row.currentStatus}
+                  </TableCell>
+
+                  <TableCell sx={{ whiteSpace: 'normal' }}>
+                    {row.issues}
+                  </TableCell>
+
+                  <TableCell sx={{ whiteSpace: 'normal' }}>
+                    {row.proposedAction}
+                  </TableCell>
+
+                  <TableCell>
+                    {row.responsiblePerson}
+                  </TableCell>
+
+                  <TableCell>
+                    {row.deadline
+                      ? new Date(row.deadline).toLocaleDateString()
+                      : ''}
+                  </TableCell>
+
+                  <TableCell sx={{ whiteSpace: 'normal' }}>
+                    {row.keyUpdates}
+                  </TableCell>
+
+                  <TableCell>
+                    {row.status}
+                  </TableCell>
+
+                  {/* Sticky Right */}
+                  <TableCell sx={stickyRightCell}>
+                    <IconButton size="small" aria-label="edit">
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+
+                    <IconButton
+                      size="small"
+                      aria-label="delete"
+                      color="error"
+                      onClick={() => handleOpenDelete(row)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                    <DeleteSingle
+                      open={openDelete}
+                      data={selectedRow}
+                      onClose={handleCloseDelete}
+                      onSuccess={fetchData}
+                    />
+                  </TableCell>
+
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Grid >
+    </Grid>
   );
 };
 
