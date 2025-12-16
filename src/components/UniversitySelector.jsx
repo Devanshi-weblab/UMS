@@ -1,10 +1,37 @@
-import React from 'react'
-import Box from '@mui/material/Box';
-import MenuItem from '@mui/material/MenuItem';
-import { TextField } from '@mui/material';
-
+import React, { useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
 
 const UniversitySelector = ({ value, onChange }) => {
+  const [universities, setUniversities] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:5000/api/programs");
+        if (!response.ok) throw new Error("Failed to fetch");
+
+        const result = await response.json();
+
+        // extract unique university names
+        const uniqueUniversities = [
+          ...new Set(result.data.map((item) => item.university)),
+        ];
+
+        setUniversities(uniqueUniversities);
+      } catch (error) {
+        console.error("Error fetching universities:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUniversities();
+  }, []);
+
   return (
     <Box sx={{ width: 320 }}>
       <TextField
@@ -21,18 +48,21 @@ const UniversitySelector = ({ value, onChange }) => {
           borderRadius: 2,
           "& .MuiOutlinedInput-root": {
             borderRadius: 2,
-          }
+          },
         }}
       >
         <MenuItem value="">
-          <em>All Universities</em>
+          <em>{loading ? "Loading..." : "All Universities"}</em>
         </MenuItem>
-        <MenuItem value="du">Delhi University</MenuItem>
-        <MenuItem value="mu">Mumbai University</MenuItem>
-        <MenuItem value="pu">Pune University</MenuItem>
+
+        {universities.map((uni) => (
+          <MenuItem key={uni} value={uni}>
+            {uni}
+          </MenuItem>
+        ))}
       </TextField>
     </Box>
   );
 };
 
-export default UniversitySelector
+export default UniversitySelector;

@@ -14,6 +14,7 @@ import StatusCard from './StatusCards';
 
 const UniversityOperations = () => {
   const [tab, setTab] = useState("overview");
+  const [selectedUniversity, setSelectedUniversity] = useState("");
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -84,7 +85,11 @@ const UniversityOperations = () => {
                   </Grid>
                   <Grid size={4}>
                     <Stack spacing={2} direction="column">
-                      <UniversitySelector />
+                      <UniversitySelector
+                        value={selectedUniversity}
+                        onChange={(e) => setSelectedUniversity(e.target.value)}
+                      />
+
                       <StatusCard status="Completed"
                         count={2}
                         percentage={20}
