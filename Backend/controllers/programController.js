@@ -75,7 +75,7 @@ exports.deleteEntry = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
+  
 // Overview stats for pie chart & cards
 exports.getOverviewStats = async (req, res) => {
   try {

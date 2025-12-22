@@ -20,47 +20,82 @@ const validationSchema = Yup.object({
   currentStatus: Yup.string().required("Current status is required"),
   proposedAction: Yup.string().required("Proposed action is required"),
   responsiblePerson: Yup.string().required("Responsible person is required"),
-  timeline: Yup.string().required("Timeline is required"),
+  deadline: Yup.string().required("Timeline is required"),
   status: Yup.string().required("Status is required"),
   keyUpdates: Yup.string().required("Key updates are required"),
 });
 
-const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
+const CreateUniversityList = ({ open, handleClose, onSuccess, mode = "create", initialData = null, }) => {
+
+  const emptyValues = {
+    university: "",
+    programs: "",
+    currentStatus: "",
+    issues: "",
+    proposedAction: "",
+    responsiblePerson: "",
+    deadline: "",
+    status: "",
+    keyUpdates: "",
+  };
+
   const formik = useFormik({
-    initialValues: {
-      university: "",
-      programs: "",
-      currentStatus: "",
-      issues: "",
-      proposedAction: "",
-      responsiblePerson: "",
-      timeline: "",
-      status: "On Track",
-      keyUpdates: "",
-    },
+    initialValues: emptyValues,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
+      console.log("SUBMIT VALUES →", values);
+
+
+      const payload = {
+        university: values.university,
+        programs: values.programs,
+        currentStatus: values.currentStatus,
+        proposedAction: values.proposedAction,
+        responsiblePerson: values.responsiblePerson,
+        deadline: values.deadline ? new Date(values.deadline) : null,
+        keyUpdates: values.keyUpdates,
+        issues: values.issues || "",
+      };
+
+      if (values.status) {
+        payload.status = values.status;
+      }
+
+
+      console.log("FINAL PAYLOAD →", payload);
+
       try {
-        const response = await fetch("http://localhost:5000/api/programs", {
-          method: "POST",
+        const url =
+          mode === "edit"
+            ? `http://localhost:5000/api/programs/${initialData._id}`
+            : "http://localhost:5000/api/programs";
+
+        const method = mode === "edit" ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+          method,
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
+          body: JSON.stringify(payload),
         });
 
-        if (!response.ok) throw new Error("Failed to save");
+        const text = await response.text();
+        console.log("SERVER RESPONSE →", response.status, text);
+
+        if (!response.ok) throw new Error(text);
 
         resetForm();
         onSuccess();
         handleClose();
       } catch (error) {
+        console.error("SUBMIT ERROR →", error);
         alert("Failed to save program. Please try again.");
       }
     },
   });
-
   const [programs, setPrograms] = useState([]);
   const [universities, setUniversities] = useState([]);
   const [isCustomUniversity, setIsCustomUniversity] = useState(false);
+
   useEffect(() => {
     if (!open) return;
 
@@ -68,8 +103,6 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
       try {
         const response = await fetch("http://localhost:5000/api/programs");
         const result = await response.json();
-
-        // extract unique universities
         const uniqueUniversities = [
           ...new Set(result.data.map(item => item.university))
         ];
@@ -84,11 +117,46 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
   }, [open]);
 
   useEffect(() => {
-    if (!open) {
-      setPrograms([]);
+    if (!open) return;
+
+    if (mode === "edit" && initialData) {
+      formik.resetForm({
+        values: {
+          university: initialData.university ?? "",
+          programs: initialData.programs ?? "",
+          currentStatus: initialData.currentStatus ?? "",
+          issues: initialData.issues ?? "",
+          proposedAction: initialData.proposedAction ?? "",
+          responsiblePerson: initialData.responsiblePerson ?? "",
+          deadline: initialData.deadline
+            ? initialData.deadline.slice(0, 10)
+            : "",
+          status: initialData.status ?? "",
+          keyUpdates: initialData.keyUpdates ?? "",
+        },
+      });
+
+      setIsCustomUniversity(false);
+    }
+
+    if (mode === "create") {
+      formik.resetForm({ values: emptyValues });
+      setIsCustomUniversity(false);
+    }
+  }, [open, mode, initialData]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (mode === "edit" && initialData) {
+      formik.setValues({
+        ...emptyValues,
+        ...initialData,
+      });
+    } else {
       formik.resetForm();
     }
-  }, [open]);
+  }, [open, mode, initialData]);
 
   return (
     <Dialog
@@ -104,7 +172,7 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
       }}
     >
       <DialogTitle sx={{ fontWeight: 600 }}>
-        Add New Program Entry
+        {mode === "edit" ? "Update Program Entry" : "Add New Program Entry"}
         <IconButton
           onClick={handleClose}
           sx={{ position: "absolute", right: 12, top: 12 }}
@@ -113,7 +181,7 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent>
+      <DialogContent dividers sx={{ pt: 2 }}>
         <form onSubmit={formik.handleSubmit}>
           <Grid container spacing={2}>
             <Grid size={6}>
@@ -123,6 +191,7 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
                 label="University *"
                 name="university"
                 fullWidth
+                displayEmpty
                 value={isCustomUniversity ? "CUSTOM" : formik.values.university}
                 onChange={(e) => {
                   if (e.target.value === "CUSTOM") {
@@ -134,6 +203,12 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
                   }
                 }}
                 onBlur={formik.handleBlur}
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return <span style={{ color: "#9e9e9e" }}>Select University</span>;
+                  }
+                  return selected;
+                }}
                 error={
                   formik.touched.university &&
                   Boolean(formik.errors.university)
@@ -142,8 +217,6 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
                   formik.touched.university && formik.errors.university
                 }
               >
-                <MenuItem value="">Select University</MenuItem>
-
                 {universities.map((uni) => (
                   <MenuItem key={uni} value={uni}>
                     {uni}
@@ -270,20 +343,15 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
               <TextField
                 size="small"
                 label="Timeline / Deadline *"
-                name="timeline"
+                name="deadline"
                 type="date"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
-                value={formik.values.timeline}
+                value={formik.values.deadline}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.timeline &&
-                  Boolean(formik.errors.timeline)
-                }
-                helperText={
-                  formik.touched.timeline && formik.errors.timeline
-                }
+                error={formik.touched.deadline && Boolean(formik.errors.deadline)}
+                helperText={formik.touched.deadline && formik.errors.deadline}
               />
             </Grid>
 
@@ -297,14 +365,12 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
                 value={formik.values.status}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.status &&
-                  Boolean(formik.errors.status)
-                }
-                helperText={
-                  formik.touched.status && formik.errors.status
-                }
+                error={formik.touched.status && Boolean(formik.errors.status)}
+                helperText={formik.touched.status && formik.errors.status}
               >
+                <MenuItem value="" disabled>
+                  Choose status
+                </MenuItem>
                 <MenuItem value="On Track">On Track</MenuItem>
                 <MenuItem value="Delayed">Delayed</MenuItem>
                 <MenuItem value="Completed">Completed</MenuItem>
@@ -336,7 +402,7 @@ const CreateUniversityList = ({ open, handleClose, onSuccess }) => {
           <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
             <Button onClick={handleClose}>CANCEL</Button>
             <Button type="submit" variant="contained">
-              ADD ENTTRY
+              {mode === "edit" ? "UPDATE ENTRY" : "ADD ENTRY"}
             </Button>
           </Box>
         </form>

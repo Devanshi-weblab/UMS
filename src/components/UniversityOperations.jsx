@@ -11,10 +11,13 @@ import UniversityToggle from './UniversityToggle';
 import NavigationBar from './NavigationBar';
 import UniversityList from './UniversityList';
 import StatusCard from './StatusCards';
+import { Box } from '@mui/material';
+import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
 
 const UniversityOperations = () => {
   const [tab, setTab] = useState("overview");
   const [selectedUniversity, setSelectedUniversity] = useState("");
+  const [overviewData, setOverviewData] = useState(null);
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -56,20 +59,40 @@ const UniversityOperations = () => {
                       University Status Overview
                     </Typography>
                     <PieChart
-
                       series={[
                         {
-                          data: [
-                            { id: 0, value: 10, label: 'At Risk', color: '#ff9933' },
-                            { id: 1, value: 15, label: 'On Track', color: '#4da6ff' },
-                            { id: 2, value: 20, label: 'Delayed', color: '#ff3333' },
-                            { id: 3, value: 12, label: 'Completed', color: '#33ff99' },
-                          ],
+                          data: overviewData
+                            ? [
+                              {
+                                id: 0,
+                                value: overviewData.counts.atRisk,
+                                label: 'At Risk',
+                                color: '#fb8c00',
+                              },
+                              {
+                                id: 1,
+                                value: overviewData.counts.onTrack,
+                                label: 'On Track',
+                                color: '#2979ff',
+                              },
+                              {
+                                id: 2,
+                                value: overviewData.counts.delayed,
+                                label: 'Delayed',
+                                color: '#e53935',
+                              },
+                              {
+                                id: 3,
+                                value: overviewData.counts.completed,
+                                label: 'Completed',
+                                color: '#2ecc71',
+                              },
+                            ]
+                            : [],
                           innerRadius: 10,
                           outerRadius: 100,
                           paddingAngle: 3,
                           cornerRadius: 3,
-
                         },
                       ]}
                       width={500}
@@ -82,43 +105,65 @@ const UniversityOperations = () => {
                         },
                       }}
                     />
+
                   </Grid>
                   <Grid size={4}>
                     <Stack spacing={2} direction="column">
-                      <UniversitySelector
-                        value={selectedUniversity}
-                        onChange={(e) => setSelectedUniversity(e.target.value)}
-                      />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1.5,
+                          backgroundColor: "#f5f6f8",
+                          borderRadius: 3,
+                          padding: "6px 12px",
+                        }}
+                      >
 
-                      <StatusCard status="Completed"
-                        count={2}
-                        percentage={20}
-                        color="#2ecc71" />
-                      <StatusCard
-                        status="On Track"
-                        count={4}
-                        percentage={40}
-                        color="#2979ff"
-                      />
+                        <AccountBalanceOutlinedIcon
+                          sx={{ color: "#6b7280", fontSize: 22 }}
+                        />
 
-                      <StatusCard
-                        status="Delayed"
-                        count={2}
-                        percentage={20}
-                        color="#e53935"
-                      />
+                        <UniversitySelector
+                          value={selectedUniversity}
+                          onChange={(e) => setSelectedUniversity(e.target.value)}
+                        />
+                      </Box>
 
-                      <StatusCard
-                        status="At Risk"
-                        count={2}
-                        percentage={20}
-                        color="#fb8c00"
-                      />
+                      {overviewData && (
+                        <>
+                          <StatusCard
+                            status="Completed"
+                            count={overviewData.counts.completed}
+                            percentage={overviewData.percentages.completed}
+                            color="#2ecc71"
+                          />
+
+                          <StatusCard
+                            status="On Track"
+                            count={overviewData.counts.onTrack}
+                            percentage={overviewData.percentages.onTrack}
+                            color="#2979ff"
+                          />
+
+                          <StatusCard
+                            status="Delayed"
+                            count={overviewData.counts.delayed}
+                            percentage={overviewData.percentages.delayed}
+                            color="#e53935"
+                          />
+
+                          <StatusCard
+                            status="At Risk"
+                            count={overviewData.counts.atRisk}
+                            percentage={overviewData.percentages.atRisk}
+                            color="#fb8c00"
+                          />
+                        </>
+                      )}
+
                     </Stack>
                   </Grid>
-
-
-
                 </Grid>
               </CardContent>
             </Card>

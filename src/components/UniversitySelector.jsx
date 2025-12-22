@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 
+
 const UniversitySelector = ({ value, onChange }) => {
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -41,7 +42,6 @@ const UniversitySelector = ({ value, onChange }) => {
         value={value}
         onChange={onChange}
         placeholder="Select University"
-        helperText="Choose a university from the list"
         variant="outlined"
         sx={{
           backgroundColor: "#fff",

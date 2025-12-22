@@ -2,13 +2,20 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/programController');
 
-const ProgramEntry = require('../models/ProgramEntry'); 
+console.log("loadingoverview");
+
+const ProgramEntry = require('../models/ProgramEntry');
+router.get('/overview', controller.getOverviewStats);
 router.post('/seed', controller.seedDemoData);
+
+
 
 router.get('/', async (req, res) => {
   const data = await ProgramEntry.find().sort({ createdAt: -1 });
   res.json({ data });
 });
+
+
 
 router.post('/', async (req, res) => {
   try {
