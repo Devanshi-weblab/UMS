@@ -1,11 +1,10 @@
 import './App.css'
-import UniversityList from './components/UniversityList'
-import UniversityOperations from './components/UniversityOperations'
+import AppRoutes from './routes/AppRoutes'
 
 function App() {
   return (
     <>
-     <div><UniversityOperations/></div>
+     <div><AppRoutes/></div>
     </>
   )
 }
